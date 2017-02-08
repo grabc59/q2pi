@@ -16,3 +16,6 @@ If you are running with an Arduino and display shield, start the server using:<b
 ## Links <br />
 Pivotal Tracker Link: <br />
 https://www.pivotaltracker.com/n/projects/1931153
+
+Heroku Deployment:<br />
+https://grabc59-eggpi.herokuapp.com
