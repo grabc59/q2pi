@@ -1,4 +1,4 @@
-#EggPi
+# EggPi
 
 ![ScreenShot](https://raw.github.com/StephenHanzlik/q2pi/readme-improve/readme-images/about.png)
 
