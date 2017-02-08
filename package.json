@@ -5,9 +5,9 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "heroku-postbuild": "knex migrate:latest",
     "knex": "knex",
-    "start": "node app.js"
+    "heroku-postbuild": "knex migrate:latest",
+    "start": "nodemon app.js"
   },
   "repository": {
     "type": "git",
