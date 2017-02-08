@@ -7,19 +7,20 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "heroku-postbuild": "knex migrate:latest",
     "knex": "knex",
-    "start": "nodemon app.js /dev/ttyACM0"
+    "start": "node app.js",
+    "serialstart": "nodemon app.js /dev/ttyACM0"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/StephenHanzlik/q2pi.git"
+    "url": "git+https://github.com/grabc59/q2pi.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Christopher Grabski, Stephen Hanzlik, Keegan Ridgley, Tom Sarkisian",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/StephenHanzlik/q2pi/issues"
+    "url": "https://github.com/grabc59/q2pi/issues"
   },
-  "homepage": "https://github.com/StephenHanzlik/q2pi#readme",
+  "homepage": "https://github.com/grabc59/q2pi#readme",
   "dependencies": {
     "bcrypt": "^1.0.0",
     "body-parser": "^1.15.2",
