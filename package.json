@@ -6,7 +6,6 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "knex": "knex",
-    "heroku-postbuild": "knex migrate:latest",
     "start": "nodemon app.js"
   },
   "repository": {
