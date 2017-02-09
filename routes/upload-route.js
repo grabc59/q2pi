@@ -2,13 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const knex = require('../knex');
-const boom = require('boom');
-var path = require('path');
-var formidable = require('formidable');
 var fs = require('fs');
 const jwt = require('jsonwebtoken');
 const privateKey = 'my_awesome_cookie_signing_key';
-var http = require('http');
+const aws = require('aws-sdk');
+require('dotenv').config();
+const S3_BUCKET = process.env.S3_BUCKET;
 
 
 const authorize = function(req, res, next) {
@@ -37,74 +36,73 @@ router.get('/', authorize, function(req, res, next) {
     });
 });
 
-router.post('/', authorize, function(req, res, next) {
+/*
+ * Respond to GET requests to /sign-s3.
+ * Upon request, return JSON containing the temporarily-signed S3 request and
+ * the anticipated URL of the image.
+ */
+router.get('/sign-s3', authorize, (req, res, next) => {
 
-  // create an incoming form object
-  var form = new formidable.IncomingForm();
+  const s3 = new aws.S3();
+  const fileName = req.query['file-name'];
+  const fileType = req.query['file-type'];
+  const s3Params = {
+    Bucket: S3_BUCKET,
+    Key: fileName,
+    Expires: 60,
+    ContentType: fileType,
+    ACL: 'public-read'
+  };
 
-  // specify that we want to allow the user to upload multiple files in a single request
-  form.multiples = true;
+  s3.getSignedUrl('putObject', s3Params, (err, data) => {
+    if(err){
+      console.log(err);
+      return res.end();
+    }
+    const returnData = {
+      signedRequest: data,
+      url: `https://${S3_BUCKET}.s3.amazonaws.com/${fileName}`
+    };
 
-  // store all uploads in the /uploads directory
-  form.uploadDir = path.join(__dirname, '../public/uploads');
-
-  // every time a file has been uploaded successfully,
-  // rename it to it's orignal name
-  form.on('file', function(field, file) {
-    ////// duplicate file name handling attempt 3
-    // create a unique string of characters plus the original file's name
-    // this allows a file to be uploaded multiple times, but not overwrite existing files in the filesystem
-    // for example '.../upload_39fe0713af8bbbbcc7ceceeeac031a69' + "_" 'G36_Notes.txt'
-    var uniqueFileName = file.path + "_" + file.name;
-    console.log(file);
-
-    fs.rename(file.path, uniqueFileName, function() {
-      // get uploader's user id
-      knex('users')
-        .where({
-          email: req.token
-        })
-        .select('id')
-        .first()
-        .then((user) => {
-          knex('uploads')
-            .insert({
-              name: file.name,
-              path: uniqueFileName,
-              // TODO: change category to the download_path, category is temporarily being used as the download path for client's 'file download' links
-              category: uniqueFileName.slice(uniqueFileName.indexOf('uploads/upload_')),
-              user_id: user.id
-            }, '*')
-            .then((result) => {
-              res.end('success\n' + result);
-              var options = {
-                // host: 'localhost',
-                port: '8000',
-                // path: '/serialport/' + 'Log in: ' + '/' + req.token
-                path: '/serialport/File%20/Uploaded!'
-              };
-              http.request(options).end();
-            })
-            .catch((err) => {
-              next(err);
-            });
-        });
+    knex('users')
+    .where({
+      email: req.token
+    })
+    .select('id')
+    .first()
+    .then((user) => {
+      knex('uploads')
+      .insert({
+        name: fileName,
+        path: returnData.url,
+        // TODO: change category to the download_path, category is temporarily being used as the download path for client's 'file download' links
+        category: returnData.url,
+        user_id: user.id
+      }, '*')
+      .then((result) => {
+        res.write(JSON.stringify(returnData));
+        res.end();
+      })
+      .catch((err) => {
+        next(err);
+      });
     });
-
   });
-
-  // log any errors that occur
-  form.on('error', function(err) {
-    console.log('An error has occured: \n' + err);
-  });
-
-  // parse the incoming request containing the form data
-  form.parse(req);
-
 });
 
+
 router.delete('/', (req, res, next) => {
-  fs.unlink(__dirname + "/../public/" + req.body.fileCat, function() {
+  const s3 = new aws.S3();
+  const fileName = req.body.fileCat;
+  const s3Params = {
+    Bucket: S3_BUCKET,
+    Key: fileName
+  };
+  s3.deleteObject (s3Params, (err, data) => {
+    if(err){
+      console.log(err);
+      return res.end();
+    }
     knex('uploads')
       .where({
         category: req.body.fileCat
@@ -116,6 +114,7 @@ router.delete('/', (req, res, next) => {
             .del()
             .where('id', result.id)
             .then((result) => {
+
               res.end('success\n' + result);
             })
             .catch((err) => {

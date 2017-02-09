@@ -22,10 +22,12 @@
           url: '/uploads'
         };
         $.ajax(options)
-          .done(() => {
+          .done(($xhr) => {
+            // console.log($xhr.responseText)
             window.location.href = '/user-landing-admin.html';
           })
           .fail(($xhr) => {
+            console.log($xhr.responseText)
             console.log("Delete failed");
           });
 
