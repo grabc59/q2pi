@@ -103,6 +103,7 @@ router.delete('/', (req, res, next) => {
       console.log(err);
       return res.end();
     }
+    console.log(data);
     knex('uploads')
       .where({
         category: req.body.fileCat
