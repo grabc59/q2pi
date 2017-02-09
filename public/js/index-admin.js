@@ -13,7 +13,6 @@
       $('.delete-button').on('click', function(){
         var pathStr = $(this).parent().get(0).innerHTML;
         var fileCat = pathStr.slice(pathStr.indexOf('href="') + 6, pathStr.indexOf('download') - 2);
-        console.log(fileCat);
 
         const options = {
           contentType: 'application/json',
@@ -27,7 +26,6 @@
             window.location.href = '/user-landing-admin.html';
           })
           .fail(($xhr) => {
-            console.log($xhr.responseText)
             console.log("Delete failed");
           });
 
