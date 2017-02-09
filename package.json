@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/grabc59/q2pi#readme",
   "dependencies": {
+    "aws-sdk": "^2.10.0",
     "bcrypt": "^1.0.0",
     "body-parser": "^1.15.2",
     "boom": "^4.2.0",
