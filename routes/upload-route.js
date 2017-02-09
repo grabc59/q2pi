@@ -8,6 +8,7 @@ const privateKey = 'my_awesome_cookie_signing_key';
 const aws = require('aws-sdk');
 require('dotenv').config();
 const S3_BUCKET = process.env.S3_BUCKET;
+const s3 = new aws.S3();
 
 
 const authorize = function(req, res, next) {
@@ -43,7 +44,6 @@ router.get('/', authorize, function(req, res, next) {
  */
 router.get('/sign-s3', authorize, (req, res, next) => {
 
-  const s3 = new aws.S3();
   const fileName = req.query['file-name'];
   const fileType = req.query['file-type'];
   const s3Params = {
@@ -90,37 +90,55 @@ router.get('/sign-s3', authorize, (req, res, next) => {
   });
 });
 
-
-router.delete('/', (req, res, next) => {
-  const s3 = new aws.S3();
-  const fileName = req.body.fileCat;
+// some code to try, maybe it will get DELETEs working on s3
+// s3.deleteObjects({
+//     Bucket: 'myprivatebucket/some/subfolders',
+//     Delete: {
+//         Objects: [
+//              { Key: 'nameofthefile1.extension' },
+//              { Key: 'nameofthefile2.extension' },
+//              { Key: 'nameofthefile3.extension' }
+//         ]
+//     }
+// }, function(err, data) {
+//
+//     if (err)
+//         return console.log(err);
+//
+//     console.log('success');
+//
+// });
+router.delete('/', authorize, (req, res, next) => {
+  const fileName = req.body.fileName;
   const s3Params = {
     Bucket: S3_BUCKET,
     Key: fileName
   };
+  console.log(s3Params);
   s3.deleteObject (s3Params, (err, data) => {
     if(err){
       console.log(err);
       return res.end();
     }
-    console.log(data);
+    console.log("here comes the delete data", data);
     knex('uploads')
       .where({
-        category: req.body.fileCat
+        name: fileName
       })
       .first()
       .then((result) => {
-        if (result.id) {
+        if (result && result.id) {
           return knex('uploads')
             .del()
             .where('id', result.id)
             .then((result) => {
-
               res.end('success\n' + result);
             })
             .catch((err) => {
               next(err);
             });
+        } else {
+          res.end('no result to delete');
         }
       });
   });
